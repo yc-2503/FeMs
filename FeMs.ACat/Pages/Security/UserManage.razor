@@ -1,0 +1,52 @@
+﻿@page "/Security/UserManage"
+@using AntDesign.TableModels
+@using FeMs.ACat.Pages.Security.Components
+<div>
+    <PageContainer Title="User Manage">
+        <ChildContent>
+            <div class="standardList">
+                <Card>
+                       <Row Gutter="24">
+                        <AntDesign.Col Sm="8" Xs="24">
+                            <Card Class="listCard" Title="User list" Style="margin-top: 24px;" BodyStyle="padding: 0 32px 40px 32px">
+                                <Extra>
+                                    <div class="extraContent">
+                                        <Search Class="extraContentSearch" Placeholder="Please Enter" @bind-Value="_model.SearchKeyword" />
+                                    </div>
+                                </Extra>
+
+                                <ChildContent>
+                                    <Button Type="dashed" Style="width: 100%; margin-bottom: 8px;" OnClick="ShowModal">
+                                        <Icon Type="plus" Theme="outline" />
+                                        Add
+                                    </Button>
+                                    <Table Style="margin-bottom: 24px;" DataSource="@_data" TItem="UserInfo"
+                                    OnRowClick="UserListClick"
+                                    HidePagination >
+                                          <AntDesign.Column Title="User Name" @bind-Field="@context.UserName" />
+                                          <AntDesign.Column Title="Product Name" @bind-Field="@context.UserName" />
+                                     </Table>
+                                </ChildContent>
+                            </Card>
+                        </AntDesign.Col>
+                        <AntDesign.Col Sm="16" Xs="24">
+                            <UserInfoDisplay userInfo=selectUser></UserInfoDisplay>
+                        </AntDesign.Col>
+                        </Row>
+            </Card>
+            </div>
+        </ChildContent>
+    </PageContainer>
+</div>
+
+@code
+{
+
+    UserInfo selectUser;
+    private void UserListClick(RowData<UserInfo> item)
+    {
+        int a = 1;
+        int b = a + 2;
+        selectUser = item.Data;
+    }
+}

@@ -1,0 +1,60 @@
+﻿<Window x:Class="FeMs.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:FeMs"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800"
+        WindowStyle="None"
+        >
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+        <DockPanel LastChildFill="False" Margin="4,0,4,0">
+            <TextBlock Text="TILE!" VerticalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                <Button Content="{Binding UserName, Mode=OneWay}"  Margin="2"/>
+                <Button x:Name="btnMin" Content="MIN!" Margin="2"/>
+                <Button x:Name="btnMax" Content="MAX!" Margin="2"/>
+                <Button x:Name="btnClose" Content="✕" Margin="2" Width="20"/>
+            </StackPanel>
+        </DockPanel>
+        <Grid Grid.Row="1">
+            
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"/>
+            <ColumnDefinition Width="8*"/>
+        </Grid.ColumnDefinitions>
+            <TabControl TabStripPlacement="Left" >
+                <TabItem Header="设置" >
+
+                </TabItem>
+                <TabItem Header="业务">
+
+                </TabItem>
+                <TabItem Header="查询">
+
+                </TabItem>
+
+                <TabItem Header="工序">
+
+                </TabItem>
+                <TabItem Header="设备">
+
+                </TabItem>
+            </TabControl>
+            
+            <TabControl Grid.Column="1">
+                
+            </TabControl>
+        </Grid>
+        <DockPanel Grid.Row="2" Margin="2">
+            <ProgressBar Margin="4,0,2,0" Width="100"/>
+            <TextBlock  Text="HELLO WORLD" Margin="2,0,2,0"/>
+        </DockPanel>
+    </Grid>
+</Window>

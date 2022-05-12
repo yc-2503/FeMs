@@ -1,0 +1,67 @@
+﻿@using Blazored.LocalStorage
+@using Microsoft.AspNetCore.Components.Authorization 
+@using System.Net.Http.Headers
+@using FeMs.Share
+@inject HttpClient httpClient
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider auProvider
+
+@page "/authentication"
+<h3>Authentication hello~</h3>
+<div class="user-info">
+    <AuthorizeView>
+        <Authorizing>
+            <text>...</text>
+        </Authorizing>
+        <Authorized>
+            <img src="img/user.svg" />
+            <div>
+                <a href="authentication/profile" class="username"></a>
+                <button class="btn btn-link sign-out" @onclick="BeginSignOut">Sign out</button>
+            </div>
+        </Authorized>
+        <NotAuthorized>
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Please enter your details</h5>
+                    <div >
+                    用户名：<input type="text" @bind-value=UserName/>
+                    </div>
+                    <div>
+                    密 码：<input type="password" @bind-value=Password/>
+                    </div>
+                    <div>
+                    <button type="submit" class="btn btn-primary" @onclick=Login>登录</button>
+                    </div>
+                    <p>@Note</p>
+
+                </div>
+            </div>
+        </NotAuthorized>
+    </AuthorizeView>
+</div>
+@code {
+    [Parameter] public string Action { get; set; }
+    async Task BeginSignOut()
+    {
+        //await SignOutManager.SetSignOutState();
+        Navigation.NavigateTo("authentication/logout");
+    }
+    string? UserName{ get; set; }
+    string? Password{ get; set; }
+    string? Note{ get; set; }
+    public async void Login()
+    {
+        var response = await httpClient.PostAsJsonAsync("Login/LoginByUserNameAndPwd", new { UserName=UserName,Pwd=Password});
+        if(response.IsSuccessStatusCode)
+        {
+            var token = await response.Content.ReadAsStringAsync();
+            ((ApiAuthenticationStateProvider)auProvider).SaveToke(token);
+            ((ApiAuthenticationStateProvider)auProvider).MarkUserAsAuthenticated(token);
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        }else
+        {
+            Note = "登录失败";
+        }
+    }
+}

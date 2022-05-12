@@ -1,0 +1,22 @@
+﻿@using Blazored.LocalStorage
+@using Microsoft.AspNetCore.Components.Authorization 
+@using System.Net.Http.Headers
+@using FeMs.Share
+@inject HttpClient httpClient
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider auProvider
+@inject ILocalStorageService _localStorage
+@page "/logout"
+
+
+@code {
+
+    protected override async Task OnInitializedAsync() 
+    {
+        ((ApiAuthenticationStateProvider)auProvider).RemoveToken();
+        ((ApiAuthenticationStateProvider)auProvider).MarkUserAsLoggedOut();
+            httpClient.DefaultRequestHeaders.Authorization = null;
+        Navigation.NavigateTo("/");
+    }
+
+}
