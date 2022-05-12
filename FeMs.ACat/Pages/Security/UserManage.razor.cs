@@ -1,43 +1,49 @@
-﻿using FeMs.ACat.Models;
+﻿using AntDesign.TableModels;
+using FeMs.ACat.Models;
+using FeMs.Share;
 using Microsoft.AspNetCore.Components;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Threading.Tasks;
 
 namespace FeMs.ACat.Pages.Security
 {
-    public class UserInfo
-    {
-        public string UserName { get; set; }
-        public List<string> Roles;
-    }
     partial class UserManage
     {
         private readonly BasicListFormModel _model = new BasicListFormModel();
 
-        private List<UserInfo> _data;
-
+        private List<UserDTO> _data;
+        private List<string> userRoles;
+        int _pageIndex = 1;
+        int _pageSize = 2;
+        int _total;
+        bool _loading = false;
         [Inject] private HttpClient ProjectService { get; set; }
 
         private void ShowModal()
         {
         }
+        async Task HandleTableChange(QueryModel<UserDTO> queryModel)
+        {
+            _loading = true;
+            await base.OnInitializedAsync();
 
+            userRoles = new List<string>();
+            userRoles.Add("role1");
+            userRoles.Add("role2");
+            userRoles.Add("role3");
+
+            var rs = await ProjectService.GetStringAsync("http://localhost:5152/UsersInfo/GetUsersCount");
+
+            int.TryParse(rs, out _total);
+
+            _data = await ProjectService.GetFromJsonAsync<List<UserDTO>>("http://localhost:5152/UsersInfo/GetUsers?from=0&to=3");
+            _loading = false;
+        }
         protected override async Task OnInitializedAsync()
         {
-            await base.OnInitializedAsync();
-            _data=new List<UserInfo>();
-            UserInfo user1 = new UserInfo() { UserName = "abc"};
-            user1.Roles = new List<string>();
-            user1.Roles.Add("role1");
-            user1.Roles.Add("role2");
-            user1.Roles.Add("role3");
 
-            _data.Add(user1);
-            _data.Add(new UserInfo() { UserName = "def" });
-            _data.Add(new UserInfo() { UserName = "mvp" });
-
-            // _data = await ProjectService.GetFakeListAsync(5);
         }
     }
 }

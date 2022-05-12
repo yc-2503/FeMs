@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace IdentityService.Domain.Entitys
 {
-    public class Role:IdentityRole<uint>
+    public class Role : IdentityRole<uint>
     {
         public Role()
         {
-
         }
     }
 }
+

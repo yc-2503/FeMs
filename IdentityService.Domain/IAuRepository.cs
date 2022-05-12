@@ -13,6 +13,8 @@ namespace IdentityService.Domain
     {
         Task<IdentityResult> CreateUserAsync(User user, string password);
         Task<User> FindByNameAsync(string userName);
+        Task<int> GetUsersCount();
+        Task<List<User>> GetUsers(int from, int to);
         Task<User?> FindByIdAsync(string userId);
         Task<SignInResult> CheckForLoginAsync(User user, string password, bool lockoutOnFailure);
         Task<IdentityResult> ChangeUserPassword(User user, string newPasswd);

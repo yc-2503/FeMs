@@ -62,10 +62,24 @@ namespace IdentityService.WebAPI.Controllers
                 }
                 return StatusCode((int)HttpStatusCode.BadRequest, msg);
             }
+         }
+        [HttpPost]
+        public async Task<ActionResult<string>> RegisterAsync(UserDTO user)
+        {
+            var r = await auDomainService.RegisterAsync(user);
+            if(r.status)
+            {
+                return Ok();
+            }else
+            {
+                return StatusCode((int)HttpStatusCode.BadRequest, r.msg);
+            }
         }
+
         [HttpGet]
         [Authorize]
-        public async Task<ActionResult<UserDTO>> GetUserInfo()
+        //获取当前用户的信息
+        public async Task<ActionResult<UserDTO>> GetCurrentUserInfo()
         {
             string userId = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
             var user = await auRepository.FindByIdAsync(userId);
@@ -75,7 +89,7 @@ namespace IdentityService.WebAPI.Controllers
             }
             //出于安全考虑，不要机密信息传递到客户端
             //除非确认没问题，否则尽量不要直接把实体类对象返回给前端
-            return new UserDTO() { Name = user.UserName,Phone=user.PhoneNumber,Email=user.Email };
+            return new UserDTO() { Id = user.Id.ToString(), UserName = user.UserName,PhoneNumber=user.PhoneNumber,Email=user.Email };
         }
     }
     public record LoginByUserNameAndPwdReq(string UserName,string Pwd);

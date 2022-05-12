@@ -27,11 +27,11 @@ namespace FeMs.ACat.Services
 
         public async Task<CurrentUser> GetCurrentUserAsync()
         {
-            UserDTO response = await _httpClient.GetFromJsonAsync<UserDTO>($"{baseUrl}Login/GetUserInfo");
+            UserDTO response = await _httpClient.GetFromJsonAsync<UserDTO>($"{baseUrl}Login/GetCurrentUserInfo");
             CurrentUser cUser = new CurrentUser();
-            cUser.Name = response.Name;
+            cUser.Name = response.UserName;
             cUser.Email = response.Email;
-            cUser.Phone = response.Phone;
+            cUser.Phone = response.PhoneNumber;
             return cUser;
         }
     }

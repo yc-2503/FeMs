@@ -1,5 +1,6 @@
 ﻿using FeMs.Common;
 using FeMs.Service;
+using FeMs.Share;
 using Prism.Commands;
 using Prism.Mvvm;
 using Prism.Services.Dialogs;

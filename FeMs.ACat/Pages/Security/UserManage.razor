@@ -1,6 +1,7 @@
 ﻿@page "/Security/UserManage"
 @using AntDesign.TableModels
 @using FeMs.ACat.Pages.Security.Components
+@using FeMs.Share
 <div>
     <PageContainer Title="User Manage">
         <ChildContent>
@@ -20,9 +21,10 @@
                                         <Icon Type="plus" Theme="outline" />
                                         Add
                                     </Button>
-                                    <Table Style="margin-bottom: 24px;" DataSource="@_data" TItem="UserInfo"
-                                    OnRowClick="UserListClick"
-                                    HidePagination >
+                                    <Table Style="margin-bottom: 24px;" DataSource="@_data" TItem="UserDTO"
+                                    OnRowClick="UserListClick" @bind-PageIndex="_pageIndex" @bind-PageSize="_pageSize" Total="_total" 
+                                    Loading="_loading" OnChange="HandleTableChange"
+                                    RemoteDataSource >
                                           <AntDesign.Column Title="User Name" @bind-Field="@context.UserName" />
                                           <AntDesign.Column Title="Product Name" @bind-Field="@context.UserName" />
                                      </Table>
@@ -42,11 +44,9 @@
 @code
 {
 
-    UserInfo selectUser;
-    private void UserListClick(RowData<UserInfo> item)
+    UserDTO selectUser;
+    private void UserListClick(RowData<UserDTO> item)
     {
-        int a = 1;
-        int b = a + 2;
         selectUser = item.Data;
     }
 }

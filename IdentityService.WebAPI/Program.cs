@@ -64,7 +64,9 @@ identityBuilder = new IdentityBuilder(identityBuilder.UserType, typeof(Role), bu
 identityBuilder.AddEntityFrameworkStores<AuDbcontex>()
     .AddDefaultTokenProviders()
     .AddRoleManager<RoleManager<Role>>()
-    .AddUserManager<UserManager<User>>();
+    .AddUserManager<UserManager<User>>()
+    .AddSignInManager<SignInManager<User>>();
+ 
 var jwtOpt = builder.Configuration.GetSection("JWT").Get<JWTOptions>();
 builder.Services.AddJWTAuthentication(jwtOpt);
 builder.Services.AddScoped<AuDomainService>();

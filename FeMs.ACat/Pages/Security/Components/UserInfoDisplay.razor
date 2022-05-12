@@ -1,4 +1,5 @@
-﻿<div class="baseView">
+﻿@using FeMs.Share
+<div class="baseView">
     <div class="left" style="min-width: 310px;">
              <Descriptions Title="Refund Application" Style="margin-bottom: 32px;">
                 <DescriptionsItem Title="User Name">@userInfo.UserName</DescriptionsItem>
@@ -6,26 +7,20 @@
                 <DescriptionsItem Title="Sales Order Number">1234123421</DescriptionsItem>
                 <DescriptionsItem Title="Sub-Order">3214321432</DescriptionsItem>
             </Descriptions>
-            @if(userInfo.Roles!=null)
+@*            @if(userInfo.Roles!=null)
             {
                 @foreach (var item in userInfo.Roles)
                 {
                     <p>@item</p>
                 }
-             }
+             }*@
 
-@*        <Form Layout="vertical">
-            <FormItem Label="User Name">
-                <AntDesign.Input  @bind-Value=userInfo/>
-            </FormItem>
-        </Form>*@
-@*            <h1>@userInfo.UserName</h1>*@
     </div>
 
 </div>
 
 @code {
     [Parameter]
-    public UserInfo userInfo{ get; set; }
+    public UserDTO userInfo{ get; set; }
 
 }

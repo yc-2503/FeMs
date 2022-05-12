@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FeMs.Common
+namespace FeMs.Share
 {
     public class ApiResponse<T>
     {

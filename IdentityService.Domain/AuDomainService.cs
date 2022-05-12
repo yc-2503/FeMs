@@ -27,8 +27,8 @@ namespace IdentityService.Domain
         }
         public async Task<bool> CreateWorld()
         {
-            var r = repository.CreateRoleAsyn("admin");
-            if (r.IsCompletedSuccessfully)
+            var r = await repository.CreateRoleAsyn("admin");
+            if (r.Succeeded)
             {
                 User user = new User("zhangsan");
                 user.CreationTime = DateTime.Now;
@@ -43,6 +43,26 @@ namespace IdentityService.Domain
                 return false;
             }
         }
+        public async Task<(bool status,string msg)> RegisterAsync(UserDTO regUser)
+        {
+            bool status = false;
+            string msg = string.Empty;
+            User newUser = new User(regUser.UserName);
+            newUser.CreationTime = DateTime.Now;
+            newUser.PhoneNumber = regUser.PhoneNumber;
+            newUser.Email = regUser.Email;
+            
+            var r = await repository.CreateUserAsync(newUser,regUser.Password);
+            if(r.Succeeded)
+            {
+                status = true;
+            }else
+            {
+                status = false;
+                msg = "注册失败";
+            }
+            return  (status,msg);
+        }
         private async Task<SignInResult> CheckUserNameAndPwdAsync(string userName, string password)
         {
             var user = await repository.FindByNameAsync(userName);
@@ -56,6 +76,7 @@ namespace IdentityService.Domain
         }
         public async Task<(SignInResult Result, string? Token)> LoginByUserNameAndPwdAsync(string userName, string password)
         {
+            
             var checkResult = await CheckUserNameAndPwdAsync(userName, password);
             if (checkResult.Succeeded)
             {

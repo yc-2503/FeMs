@@ -16,4 +16,8 @@
     <Folder Include="Infrastructure\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\FeMs.Share\FeMs.Share.csproj" />
+  </ItemGroup>
+
 </Project>

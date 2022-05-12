@@ -1,6 +1,7 @@
 ﻿using IdentityService.Domain;
 using IdentityService.Domain.Entitys;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,20 +14,30 @@ namespace IdentityService.Infrastructure
     {
         private readonly UserManager<User> userManager;
         private readonly RoleManager<Role> roleManager;
+        private readonly SignInManager<User> signInManager;
 
-        public AuRepository(UserManager<User> userManager, RoleManager<Role> roleManager)
+        public AuRepository(UserManager<User> userManager, RoleManager<Role> roleManager, SignInManager<User> signInManager)
         {
             this.userManager = userManager;
             this.roleManager = roleManager;
+            this.signInManager = signInManager;
         }
-        
+
         public Task<User> FindByNameAsync(string userName)
         {
             return userManager.FindByNameAsync(userName);
         }
-        public Task<IdentityResult>CreateUserAsync(User user,string password)
+        public Task<IdentityResult> CreateUserAsync(User user,string password)
         {
             return this.userManager.CreateAsync(user, password);
+        }
+        public async Task<int> GetUsersCount()
+        {
+            return await this.userManager.Users.CountAsync();
+        }
+        public async Task<List<User>> GetUsers(int from,int to)
+        {
+            return await this.userManager.Users.OrderBy(u => u.Id).Skip(from).Take(to - from).ToListAsync();
         }
         //添加一个角色，不需要提前检查这个role是否存在，identity框架内部有处理
         public Task<IdentityResult>CreateRoleAsyn(string roleName)
@@ -69,28 +80,9 @@ namespace IdentityService.Infrastructure
             var r = await userManager.ResetPasswordAsync(user,token,newPasswd);
             return r;
         }
-        public async Task<SignInResult> CheckForLoginAsync(User user, string password, bool lockoutOnFailure)
-        {
-            if (await userManager.IsLockedOutAsync(user))
-            {
-                return SignInResult.LockedOut;
-            }
-            else
-            {
-                if (await userManager.CheckPasswordAsync(user, password))
-                {
-                    return SignInResult.Success;
-                }
-                else
-                {
-                    if (lockoutOnFailure)
-                    {
-                        await AccessFailedAsync(user);//失败次数++,数据库操作失败就失败了，这里以后要加上日志
-                    }
-                    return SignInResult.Failed;
-                }
-            }
-        }
+        public async Task<SignInResult> CheckForLoginAsync(User user, string password, bool lockoutOnFailure) =>
+            await signInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure);
+        
 
         public async Task<User?> FindByIdAsync(string userId)
         {
