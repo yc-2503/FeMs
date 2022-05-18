@@ -177,6 +177,11 @@
         "path": "/Security/UserManage",
         "name": "User Manager",
         "key": "security.usermanager"
+      },
+      {
+        "path": "/Security/RoleManage",
+        "name": "Role Manager",
+        "key": "security.rolemanager"
       }
     ]
   }

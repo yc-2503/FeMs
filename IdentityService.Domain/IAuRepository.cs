@@ -21,7 +21,9 @@ namespace IdentityService.Domain
         Task<IdentityResult> AddToRoleAsync(User user, string role);
         Task<IList<string>> GetRolesAsync(User user);
         Task<IdentityResult> CreateRoleAsyn(string roleName);
-        public Task<Role> FindRoleAsync(string roleName);
+        Task<Role> FindRoleAsync(string roleName);
+        Task<int> GetRolesCount();
+        Task<List<Role>> GetRoles(int from, int to);
 
     }
 }

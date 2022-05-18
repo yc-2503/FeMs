@@ -1,4 +1,4 @@
-﻿@page "/Security/UserManage"
+﻿@page "/Security/RoleManage"
 @using AntDesign.TableModels
 @using FeMs.ACat.Pages.Security.Components
 @using FeMs.Share
@@ -6,7 +6,7 @@
     <PageContainer Title="User Manage">
         <ChildContent>
  
-                <Card Class="listCard" Title="User list" Style="margin-top: 24px;" BodyStyle="padding: 0 32px 40px 32px">
+                <Card Class="listCard" Title="Role list" Style="margin-top: 24px;" BodyStyle="padding: 0 32px 40px 32px">
                     <Extra>
                         <div class="extraContent">
                             <Search Class="extraContentSearch" Placeholder="Please Enter" @bind-Value="_model.SearchKeyword" />
@@ -26,13 +26,11 @@
                             <Icon Type="minus" Theme="outline"/>
                             Delete
                         </Button>
-                        <Table Style="margin-bottom: 24px;" DataSource="@_data" TItem="UserDTO"
+                        <Table Style="margin-bottom: 24px;" DataSource="@_data" TItem="RoleDTO"
                         OnRowClick="UserListClick" @bind-PageIndex="_pageIndex" @bind-PageSize="_pageSize" Total="_total" 
                         Loading="_loading" OnChange="HandleTableChange"
                         RemoteDataSource >
-                              <AntDesign.Column Title="User Name" @bind-Field="@context.UserName" />
-                              <AntDesign.Column Title="Phone Num" @bind-Field="@context.PhoneNumber" />
-                              <AntDesign.Column Title="email" @bind-Field="@context.Email" />
+                              <AntDesign.Column Title="User Name" @bind-Field="@context.RoleName" />
 
                          </Table>
                     </ChildContent>
@@ -41,3 +39,4 @@
         </ChildContent>
     </PageContainer>
 </div>
+

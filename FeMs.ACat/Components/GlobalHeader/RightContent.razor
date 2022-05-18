@@ -44,7 +44,8 @@
     <SpaceItem>
         <AuthorizeView>
             <Authorized>
-                        <AvatarDropdown Name="@context.User.Identity.Name"
+                        @*<AvatarDropdown Name="@context.User.Identity.Name"*@
+                        <AvatarDropdown Name="@_currentUser.Name"
                         Avatar="@_currentUser.Avatar"
                         MenuItems="@AvatarMenuItems"
                         OnItemSelected="HandleSelectUser" />

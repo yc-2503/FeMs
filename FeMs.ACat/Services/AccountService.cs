@@ -46,7 +46,6 @@ namespace FeMs.ACat.Services
             if (response.IsSuccessStatusCode)
             {
                 var token = await response.Content.ReadAsStringAsync();
-                ((ApiAuthenticationStateProvider)auProvider).SaveToke(token);
                 ((ApiAuthenticationStateProvider)auProvider).MarkUserAsAuthenticated(token);
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
                 return (true,string.Empty);

@@ -1,12 +1,14 @@
 ﻿@using FeMs.Share
 <div class="baseView">
     <div class="left" style="min-width: 310px;">
-             <Descriptions Title="Refund Application" Style="margin-bottom: 32px;">
-                <DescriptionsItem Title="User Name">@userInfo.UserName</DescriptionsItem>
+
+             <Descriptions Title="@userInfo.UserName" Style="margin-bottom: 32px;">
+@*                <DescriptionsItem Title="User Name" Style="margin-bottom: 32px;">@userInfo.UserName </DescriptionsItem>*@
                 <DescriptionsItem Title="Status">Picked Up</DescriptionsItem>
                 <DescriptionsItem Title="Sales Order Number">1234123421</DescriptionsItem>
                 <DescriptionsItem Title="Sub-Order">3214321432</DescriptionsItem>
             </Descriptions>
+
 @*            @if(userInfo.Roles!=null)
             {
                 @foreach (var item in userInfo.Roles)

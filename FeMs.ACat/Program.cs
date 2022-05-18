@@ -18,15 +18,7 @@ namespace FeMs.ACat
         {
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("#app");
-            //builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(@"http://localhost:5152/") });
-            builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
-            builder.Services.AddAntDesign();
-            builder.Services.Configure<ProSettings>(builder.Configuration.GetSection("ProSettings"));
-            builder.Services.AddScoped<IChartService, ChartService>();
-            builder.Services.AddScoped<IProjectService, ProjectService>();
-            builder.Services.AddScoped<IUserService, UserService>();
-            builder.Services.AddScoped<IAccountService, AccountService>();
-            builder.Services.AddScoped<IProfileService, ProfileService>();
+
             builder.Services.AddBlazoredLocalStorage(config =>
             {
                 config.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
@@ -36,7 +28,27 @@ namespace FeMs.ACat
                 config.JsonSerializerOptions.ReadCommentHandling = JsonCommentHandling.Skip;
                 config.JsonSerializerOptions.WriteIndented = false;
             });
+
+            //builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(@"http://localhost:5152/") });
             builder.Services.AddAuthorizationCore().AddScoped<AuthenticationStateProvider, ApiAuthenticationStateProvider>();
+            var auProvider = builder.Services.BuildServiceProvider().GetService<AuthenticationStateProvider>();
+            var token = await ((ApiAuthenticationStateProvider)auProvider).GetToke();
+            builder.Services.AddScoped( sp => 
+            {
+                var _httpClient = new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) };
+                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                return _httpClient;
+            }) ;
+           
+
+            builder.Services.AddAntDesign();
+            builder.Services.Configure<ProSettings>(builder.Configuration.GetSection("ProSettings"));
+            builder.Services.AddScoped<IChartService, ChartService>();
+            builder.Services.AddScoped<IProjectService, ProjectService>();
+            builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IAccountService, AccountService>();
+            builder.Services.AddScoped<IProfileService, ProfileService>();
+
             await builder.Build().RunAsync();
         }
     }

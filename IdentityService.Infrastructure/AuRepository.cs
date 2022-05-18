@@ -88,5 +88,15 @@ namespace IdentityService.Infrastructure
         {
             return await userManager.FindByIdAsync(userId);
         }
+
+        public async Task<List<Role>> GetRoles(int from, int to)
+        {
+            return await this.roleManager.Roles.OrderBy(u => u.Id).Skip(from).Take(to - from).ToListAsync();
+        }
+
+        public async Task<int> GetRolesCount()
+        {
+            return await this.roleManager.Roles.CountAsync();
+        }
     }
 }

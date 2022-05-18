@@ -14,12 +14,10 @@ namespace FeMs.Share
     public class ApiAuthenticationStateProvider : AuthenticationStateProvider
     {
         private readonly ILocalStorageService _localStorage;
-        private readonly HttpClient _httpClient;
 
-        public ApiAuthenticationStateProvider(ILocalStorageService localStorage, HttpClient httpClient)
+        public ApiAuthenticationStateProvider(ILocalStorageService localStorage)
         {
             _localStorage = localStorage;
-            _httpClient = httpClient;
         }
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
@@ -30,13 +28,15 @@ namespace FeMs.Share
             {
                 return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
             }
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", savedToken);
-
-            return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity(ParseClaimsFromJwt(savedToken), "jwt")));
+            else
+            {
+             //   _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", savedToken);
+                return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity(ParseClaimsFromJwt(savedToken), "jwt")));
+            }
         }
-        public async void SaveToke(string token)
+        public async Task<string> GetToke()
         {
-            await  _localStorage.SetItemAsync("authToken", token);
+            return await _localStorage.GetItemAsStringAsync("authToken");
         }
         public async void RemoveToken()
         {
@@ -45,7 +45,9 @@ namespace FeMs.Share
         public void MarkUserAsAuthenticated(string token)
         {
             var authenticatedUser = new ClaimsPrincipal(new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt"));
+            _localStorage.SetItemAsStringAsync("authToken", token);
             var authState = Task.FromResult(new AuthenticationState(authenticatedUser));
+
             //var authenticatedUser = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.Name, account), new Claim(ClaimTypes.Role, account) }, "apiauth"));
             //var authState = Task.FromResult(new AuthenticationState(authenticatedUser));
             NotifyAuthenticationStateChanged(authState);

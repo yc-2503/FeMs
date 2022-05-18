@@ -9,7 +9,7 @@ namespace IdentityService.WebAPI.Controllers
 {
     [Route("[controller]/[action]")]
     [ApiController]
-    //[Authorize (Roles ="admin")]
+    [Authorize(Roles = "admin")]
     public class UsersInfoController : ControllerBase
     {
         private readonly IAuRepository auRepository;
