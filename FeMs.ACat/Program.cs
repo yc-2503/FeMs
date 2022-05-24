@@ -1,6 +1,7 @@
 using AntDesign.ProLayout;
 using Blazored.LocalStorage;
 using FeMs.ACat.Services;
+using FeMs.ACat.Utils;
 using FeMs.Share;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -28,18 +29,23 @@ namespace FeMs.ACat
                 config.JsonSerializerOptions.ReadCommentHandling = JsonCommentHandling.Skip;
                 config.JsonSerializerOptions.WriteIndented = false;
             });
-
-            //builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(@"http://localhost:5152/") });
             builder.Services.AddAuthorizationCore().AddScoped<AuthenticationStateProvider, ApiAuthenticationStateProvider>();
             var auProvider = builder.Services.BuildServiceProvider().GetService<AuthenticationStateProvider>();
             var token = await ((ApiAuthenticationStateProvider)auProvider).GetToke();
-            builder.Services.AddScoped( sp => 
+            builder.Services.AddHttpClient(name: "Identity", c =>
             {
-                var _httpClient = new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) };
+                c.BaseAddress = new Uri(builder.Configuration.GetSection("IdentityURL").Value);
+                c.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            });
+
+            // builder.Services.AddScoped<LoginHandler>();
+            //var loginHandler = new LoginHandler();
+            builder.Services.AddScoped(sp =>
+            {
+                var _httpClient = new HttpClient() { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) };
                 _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
                 return _httpClient;
-            }) ;
-           
+            });
 
             builder.Services.AddAntDesign();
             builder.Services.Configure<ProSettings>(builder.Configuration.GetSection("ProSettings"));
@@ -48,6 +54,7 @@ namespace FeMs.ACat
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IAccountService, AccountService>();
             builder.Services.AddScoped<IProfileService, ProfileService>();
+
 
             await builder.Build().RunAsync();
         }

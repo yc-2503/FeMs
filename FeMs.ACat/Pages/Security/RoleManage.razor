@@ -27,10 +27,10 @@
                             Delete
                         </Button>
                         <Table Style="margin-bottom: 24px;" DataSource="@_data" TItem="RoleDTO"
-                        OnRowClick="UserListClick" @bind-PageIndex="_pageIndex" @bind-PageSize="_pageSize" Total="_total" 
+                        OnRowClick="RoleListClick" @bind-PageIndex="_pageIndex" @bind-PageSize="_pageSize" Total="_total" 
                         Loading="_loading" OnChange="HandleTableChange"
                         RemoteDataSource >
-                              <AntDesign.Column Title="User Name" @bind-Field="@context.RoleName" />
+                              <AntDesign.Column Title="User Name" @bind-Field="@context.Name" />
 
                          </Table>
                     </ChildContent>

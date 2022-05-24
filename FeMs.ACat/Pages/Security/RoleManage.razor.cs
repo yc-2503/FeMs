@@ -22,7 +22,7 @@ namespace FeMs.ACat.Pages.Security
         [Inject] private HttpClient ProjectService { get; set; }
 
         RoleDTO selectUser;
-        private void UserListClick(RowData<RoleDTO> item)
+        private void RoleListClick(RowData<RoleDTO> item)
         {
             selectUser = item.Data;
         }

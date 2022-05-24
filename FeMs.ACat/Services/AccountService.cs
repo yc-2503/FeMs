@@ -16,6 +16,7 @@ namespace FeMs.ACat.Services
     {
         Task<(bool status, string? msg)> LoginAsync(LoginParamsType model);
         void Logout();
+        Task<bool> ReLoginAsync();
         Task<string> GetCaptchaAsync(string modile);
     }
 
@@ -23,13 +24,16 @@ namespace FeMs.ACat.Services
     {
         private readonly Random _random = new Random();
         private readonly AuthenticationStateProvider auProvider;
+
         private readonly HttpClient httpClient;
-        private readonly string baseUrl;
-        public AccountService(HttpClient httpClient, AuthenticationStateProvider auProvider, IConfiguration configuration)
+
+        LoginParamsType _model = new LoginParamsType();
+        public AccountService(AuthenticationStateProvider auProvider, IHttpClientFactory httpClientFactory)
         {
-            this.httpClient = httpClient;
+            this.httpClient = httpClientFactory.CreateClient(name:"Identity");
             this.auProvider = auProvider;
-            this.baseUrl = configuration.GetValue<string>("IdentityURL");
+           // this.baseUrl = configuration.GetValue<string>("IdentityURL");
+
         }
 
         public void Logout()
@@ -38,16 +42,37 @@ namespace FeMs.ACat.Services
             ((ApiAuthenticationStateProvider)auProvider).RemoveToken();
             ((ApiAuthenticationStateProvider)auProvider).MarkUserAsLoggedOut();
         }
-        public async Task<(bool status,string?msg)> LoginAsync(LoginParamsType model)
+        public async Task<bool> ReLoginAsync()
         {
-            // todo: login logic
-            //new Uri(@"http://localhost:5152/") 
-            var response = await httpClient.PostAsJsonAsync($"{baseUrl}Login/LoginByUserNameAndPwd", new { UserName = model.UserName, Pwd = model.Password });
+            var response = await httpClient.PostAsJsonAsync($"http://172.16.12.157:5152/Login/LoginByUserNameAndPwd", new { UserName = _model.UserName, Pwd = _model.Password });
             if (response.IsSuccessStatusCode)
             {
                 var token = await response.Content.ReadAsStringAsync();
                 ((ApiAuthenticationStateProvider)auProvider).MarkUserAsAuthenticated(token);
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        public async Task<(bool status,string?msg)> LoginAsync(LoginParamsType model)
+        {
+            // todo: login logic
+            //new Uri(@"http://localhost:5152/") 
+            //var response = await httpClient.PostAsJsonAsync($"{baseUrl}Login/LoginByUserNameAndPwd", new { UserName = model.UserName, Pwd = model.Password });
+            var response = await httpClient.PostAsJsonAsync("Login/LoginByUserNameAndPwd", new { UserName = model.UserName, Pwd = model.Password });
+
+            if (response.IsSuccessStatusCode)
+            {
+                var token = await response.Content.ReadAsStringAsync();
+                ((ApiAuthenticationStateProvider)auProvider).MarkUserAsAuthenticated(token);
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                _model.UserName = model.UserName;
+                _model.Password = model.Password;
                 return (true,string.Empty);
             }
             else

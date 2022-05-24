@@ -15,6 +15,7 @@ namespace FeMs.ACat.Services
     {
         Task<CurrentUser> GetCurrentUserAsync();
         Task<int> GetUsersCount();
+        Task<int> GetRolesCount();
         Task<List<UserDTO>> GetUsers(int from, int to);
         Task<List<RoleDTO>> GetRoles(int from, int to);
     }
@@ -24,11 +25,11 @@ namespace FeMs.ACat.Services
         private readonly HttpClient _httpClient;
         private readonly AuthenticationStateProvider authenticationStateProvider;
         private readonly string baseUrl;
-        public UserService(HttpClient httpClient, IConfiguration configuration, AuthenticationStateProvider authenticationStateProvider)
+        public UserService(IHttpClientFactory httpClientFactory, AuthenticationStateProvider authenticationStateProvider)
         {
 
-            _httpClient = httpClient;
-            this.baseUrl = configuration.GetValue<string>("IdentityURL");
+            _httpClient = httpClientFactory.CreateClient(name: "Identity"); ;
+
             this.authenticationStateProvider = authenticationStateProvider;
         }
 
@@ -36,11 +37,25 @@ namespace FeMs.ACat.Services
         {
 
             CurrentUser cUser = new CurrentUser();
-
-            UserDTO response = await _httpClient.GetFromJsonAsync<UserDTO>($"{baseUrl}Login/GetCurrentUserInfo");
-            cUser.Name = response.UserName;
-            cUser.Email = response.Email;
-            cUser.Phone = response.PhoneNumber;
+            var r = await _httpClient.GetAsync("Login/GetCurrentUserInfo");
+            if (r != null)
+            {
+                //JWT过期了，客户端其实不知道，这里这么实现不太好，有人是专门创建了一个线程，不断的去访问server看JWT有没有过期。
+                if(r.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    ((ApiAuthenticationStateProvider)authenticationStateProvider).MarkUserAsLoggedOut();
+                }else if(r.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    var user = await r.Content.ReadFromJsonAsync<UserDTO>();
+                    cUser.Name = user.UserName;
+                    cUser.Email = user.Email;
+                    cUser.Phone = user.PhoneNumber;
+                }
+            }
+            //UserDTO response = await _httpClient.GetFromJsonAsync<UserDTO>($"{baseUrl}Login/GetCurrentUserInfo");
+            //cUser.Name = response.UserName;
+            //cUser.Email = response.Email;
+            //cUser.Phone = response.PhoneNumber;
 
             return cUser;
         }
@@ -62,9 +77,22 @@ namespace FeMs.ACat.Services
             return _data;
         }
 
-        public Task<List<RoleDTO>> GetRoles(int from, int to)
+        public async Task<List<RoleDTO>> GetRoles(int from, int to)
         {
-            throw new System.NotImplementedException();
+            List<RoleDTO> _data = new List<RoleDTO>();
+            if (to >= from && from >= 0 & to >= 0)
+            {
+                _data = await _httpClient.GetFromJsonAsync<List<RoleDTO>>($"{baseUrl}UsersInfo/GetRoles?from={from}&to={to}");
+            }
+            return _data;
+        }
+
+        public async Task<int> GetRolesCount()
+        {
+            int _total = 0;
+            var rs = await _httpClient.GetStringAsync($"{baseUrl}UsersInfo/GetRolesCount");
+            int.TryParse(rs, out _total);
+            return _total;
         }
     }
 }

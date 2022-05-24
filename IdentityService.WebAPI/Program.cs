@@ -72,7 +72,7 @@ builder.Services.AddJWTAuthentication(jwtOpt);
 builder.Services.AddScoped<AuDomainService>();
 
 //增加跨域访问，要不然blazor前端调用不了这里的API
-string[] urls = new[] { "http://localhost:5023", "http://localhost:5002" };
+string[] urls = new[] { "http://localhost:5023", "http://172.16.12.157:5002" };
 builder.Services.AddCors(options =>
     options.AddDefaultPolicy(builder => builder.WithOrigins(urls)
     .AllowAnyMethod().AllowAnyHeader().AllowCredentials()));

@@ -23,6 +23,9 @@ namespace IdentityService.WebAPI.Controllers
         public async Task<ActionResult<int>> GetUsersCount() => 
             await auRepository.GetUsersCount();
         [HttpGet]
+        public async Task<ActionResult<int>> GetRolesCount() =>
+             await auRepository.GetRolesCount();
+        [HttpGet]
         public async Task<ActionResult<List<UserDTO>>> GetUsers(int from,int to)
         {
             List<UserDTO> userList = new List<UserDTO>();
@@ -40,7 +43,24 @@ namespace IdentityService.WebAPI.Controllers
                 }
             }
             return userList;
+        }
+        [HttpGet]
+        public async Task<ActionResult<List<RoleDTO>>> GetRoles(int from, int to)
+        {
+            List<RoleDTO> roleList = new List<RoleDTO>();
+            if (to >= from)
+            {
+                List<Role> roles = await auRepository.GetRoles(from, to);
+                foreach (var role in roles)
+                {
+                    RoleDTO roleDTO = new RoleDTO();
+                    roleDTO.Name = role.Name;
+                    roleDTO.Id = role.Id.ToString();
 
+                    roleList.Add(roleDTO);
+                }
+            }
+            return roleList;
         }
     }
 }
