@@ -42,12 +42,12 @@ namespace IdentityService.WebAPI.Controllers
         }
         //( Microsoft.AspNetCore.Identity.SignInResult Result, string Token)
         [HttpPost]
-        public async Task<ActionResult<string>> LoginByUserNameAndPwd(LoginByUserNameAndPwdReq req)
+        public async Task<ActionResult<IdentityToken>> LoginByUserNameAndPwd(LoginByUserNameAndPwdReq req)
         {
-            (var checkResult, string? token) = await auDomainService.LoginByUserNameAndPwdAsync(req.UserName, req.Pwd);
+            (var checkResult, string accessToken, string refreshToken) = await auDomainService.LoginAsync(req.UserName, req.Pwd);
             if (checkResult.Succeeded)
             {
-                return Ok(token);
+                return Ok(new IdentityToken(accessToken,refreshToken));
             }
             else
             {
@@ -63,6 +63,35 @@ namespace IdentityService.WebAPI.Controllers
                 return StatusCode((int)HttpStatusCode.BadRequest, msg);
             }
          }
+        [HttpGet]
+        [Authorize (Roles = "Refresh")]
+        public async Task<ActionResult<IdentityToken>> LoginByRefreshToken()
+        {
+            string userId = this.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await auRepository.FindByIdAsync(userId);
+            if (user == null)//可能用户注销了
+            {
+                return NotFound();
+            }
+            (var checkResult, string accessToken,string refreshToken) = await auDomainService.LoginAsync(user);
+            if (checkResult.Succeeded)
+            {
+                return Ok(new IdentityToken(accessToken, refreshToken));
+            }
+            else
+            {
+                string msg = "用户名或密码错误";
+                if (checkResult.IsLockedOut)
+                {
+                    msg = "用户被锁定";
+                }
+                else if (checkResult.IsNotAllowed)
+                {
+                    msg = "用户名未激活";
+                }
+                return StatusCode((int)HttpStatusCode.BadRequest, msg);
+            }
+        }
         [HttpPost]
         public async Task<ActionResult<string>> RegisterAsync(UserDTO user)
         {

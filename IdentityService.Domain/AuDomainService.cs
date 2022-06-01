@@ -74,30 +74,38 @@ namespace IdentityService.Domain
             var result = await repository.CheckForLoginAsync(user, password, true);
             return result;
         }
-        public async Task<(SignInResult Result, string? Token)> LoginByUserNameAndPwdAsync(string userName, string password)
+        public async Task<(SignInResult Result, string accessToken,string refreshToken)> LoginAsync(string userName, string password)
         {
             
             var checkResult = await CheckUserNameAndPwdAsync(userName, password);
             if (checkResult.Succeeded)
             {
                 var user = await repository.FindByNameAsync(userName);
-                string token = await BuildTokenAsync(user);
-                return (SignInResult.Success, token);
+                string accessToken = await BuildTokenAsync(user);
+                string refreshToken = await BuildRefreshTokenAsync(user);
+                return (SignInResult.Success, accessToken, refreshToken);
             }
             else
             {
-                return (checkResult, null);
+                return (checkResult, String.Empty,string .Empty);
             }
         }
-        string BuildToken(List<Claim> claims)
+        public async Task<(SignInResult Result, string accessToken, string refreshToken)> LoginAsync(User user)
         {
-            DateTime expires = DateTime.Now.AddSeconds(jwtOption.ExpireSeconds);
-            byte[] secBytes = Encoding.UTF8.GetBytes(jwtOption.Key);
-            var secKey = new SymmetricSecurityKey(secBytes);
-            var credentials = new SigningCredentials(secKey, SecurityAlgorithms.HmacSha256Signature);
-            var tokenDescriptor = new JwtSecurityToken(jwtOption.Issuer, jwtOption.Audience, claims: claims, expires: expires, signingCredentials: credentials);
-            string jwt = new JwtSecurityTokenHandler().WriteToken(tokenDescriptor);
-            return jwt;
+            string accessToken = await BuildTokenAsync(user);
+            string refreshToken = await BuildRefreshTokenAsync(user);
+            return (SignInResult.Success, accessToken, refreshToken);
+        }
+        public async Task<string> BuildRefreshTokenAsync(User user)
+        {
+            var roles = await repository.GetRolesAsync(user);
+            List<Claim> claims = new List<Claim>();
+            claims.Add(new Claim(ClaimTypes.Name, user.UserName));
+            claims.Add(new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()));
+
+            claims.Add(new Claim(ClaimTypes.Role, "Refresh"));
+            DateTime expires = DateTime.Now.AddSeconds(jwtOption.RefreshSeconds);
+            return BuildToken(claims, expires);
         }
         private async Task<string> BuildTokenAsync(User user)
         {
@@ -109,7 +117,19 @@ namespace IdentityService.Domain
             {
                 claims.Add(new Claim(ClaimTypes.Role, role));
             }
-            return BuildToken(claims);
+            DateTime expires = DateTime.Now.AddSeconds(jwtOption.ExpireSeconds);
+            return BuildToken(claims, expires);
         }
+        string BuildToken(List<Claim> claims, DateTime expires)
+        {
+            
+            byte[] secBytes = Encoding.UTF8.GetBytes(jwtOption.Key);
+            var secKey = new SymmetricSecurityKey(secBytes);
+            var credentials = new SigningCredentials(secKey, SecurityAlgorithms.HmacSha256Signature);
+            var tokenDescriptor = new JwtSecurityToken(jwtOption.Issuer, jwtOption.Audience, claims: claims, expires: expires, signingCredentials: credentials);
+            string jwt = new JwtSecurityTokenHandler().WriteToken(tokenDescriptor);
+            return jwt;
+        }
+
     }
 }

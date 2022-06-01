@@ -55,10 +55,12 @@
         var response = await httpClient.PostAsJsonAsync("Login/LoginByUserNameAndPwd", new { UserName=UserName,Pwd=Password});
         if(response.IsSuccessStatusCode)
         {
-            var token = await response.Content.ReadAsStringAsync();
-            ((ApiAuthenticationStateProvider)auProvider).SaveToke(token);
-            ((ApiAuthenticationStateProvider)auProvider).MarkUserAsAuthenticated(token);
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            var token = await response.Content.ReadFromJsonAsync<IdentityToken>();
+            if(token != null)
+            {
+                ((ApiAuthenticationStateProvider)auProvider).MarkUserAsAuthenticated(token.accessToken,token.refreshToken);
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.accessToken);
+            }
         }else
         {
             Note = "登录失败";

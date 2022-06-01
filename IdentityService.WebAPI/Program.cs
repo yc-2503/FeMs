@@ -42,7 +42,6 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new() { Title = "IdentityService.WebAPI", Version = "v1" });
     //c.AddAuthenticationHeader();
 });
-
 builder.Services.AddDataProtection();
 
 IdentityBuilder identityBuilder = builder.Services.AddIdentityCore<User>(

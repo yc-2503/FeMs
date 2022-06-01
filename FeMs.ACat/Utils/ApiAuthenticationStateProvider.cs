@@ -1,4 +1,6 @@
 ﻿using Blazored.LocalStorage;
+using FeMs.Share;
+using MediatR;
 using Microsoft.AspNetCore.Components.Authorization;
 using System;
 using System.Collections.Generic;
@@ -7,22 +9,81 @@ using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 
-namespace FeMs.Share
+namespace FeMs.ACat.Utils
 {
-    public class ApiAuthenticationStateProvider : AuthenticationStateProvider
+    public class TokenHelper
     {
         private readonly ILocalStorageService _localStorage;
+        private string _accessToken = string.Empty;
+        private string _refreshToken = string.Empty;
 
-        public ApiAuthenticationStateProvider(ILocalStorageService localStorage)
+        public TokenHelper(ILocalStorageService localStorage)
         {
             _localStorage = localStorage;
+            InitTokens();
+            //accessToken = _localStorage.GetItemAsStringAsync("accessToken").Result;
+            //refreshToken = _localStorage.GetItemAsStringAsync("refreshToken").Result;
+        }
+        async void InitTokens()
+        {
+            if(_accessToken == string.Empty)
+            {
+                _accessToken = await _localStorage.GetItemAsStringAsync("accessToken");
+            }
+            if(_refreshToken == string.Empty)
+            {
+                _refreshToken = await _localStorage.GetItemAsStringAsync("refreshToken");
+            }
+        }
+        public string GetAccessToke()
+        {
+            //return await _localStorage.GetItemAsStringAsync("accessToken");
+            return _accessToken;
+        }
+        public async Task<string> GetAccessTokeAsync()
+        {
+            return await _localStorage.GetItemAsStringAsync("accessToken");
+        }
+        public async Task SetAccessToken(string accessToken)
+        {
+            _accessToken = accessToken;
+            await _localStorage.SetItemAsStringAsync("accessToken", accessToken);
+        }
+        public string GetRefreshToken()
+        {
+            // return await _localStorage.GetItemAsStringAsync("refreshToken");
+            return _refreshToken;
+        }
+        public async Task SetRefreshToken(string refreshToken)
+        {
+            _refreshToken = refreshToken;
+            await _localStorage.SetItemAsStringAsync("refreshToken", refreshToken);
+        }
+        public void RemoveToken()
+        {
+            _accessToken = String.Empty;
+            _refreshToken = String.Empty;
+
+            _localStorage.RemoveItemAsync("accessToken");
+            _localStorage.RemoveItemAsync("refreshToken");
+        }
+
+    }
+    public class ApiAuthenticationStateProvider : AuthenticationStateProvider
+    {
+        private readonly TokenHelper _tokenHelper;
+
+        public ApiAuthenticationStateProvider(TokenHelper tokenHelper)
+        {
+            _tokenHelper = tokenHelper;
         }
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
-            var savedToken = await _localStorage.GetItemAsync<string>("authToken");
+            var savedToken =  _tokenHelper.GetAccessToke();
 
             if (string.IsNullOrWhiteSpace(savedToken))
             {
@@ -34,18 +95,12 @@ namespace FeMs.Share
                 return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity(ParseClaimsFromJwt(savedToken), "jwt")));
             }
         }
-        public async Task<string> GetToke()
+
+        public void MarkUserAsAuthenticated()
         {
-            return await _localStorage.GetItemAsStringAsync("authToken");
-        }
-        public async void RemoveToken()
-        {
-            await _localStorage.RemoveItemAsync("authToken");
-        }
-        public void MarkUserAsAuthenticated(string token)
-        {
-            var authenticatedUser = new ClaimsPrincipal(new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt"));
-            _localStorage.SetItemAsStringAsync("authToken", token);
+            string accessToken = _tokenHelper.GetAccessToke();
+            var authenticatedUser = new ClaimsPrincipal(new ClaimsIdentity(ParseClaimsFromJwt(accessToken), "jwt"));
+
             var authState = Task.FromResult(new AuthenticationState(authenticatedUser));
 
             //var authenticatedUser = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.Name, account), new Claim(ClaimTypes.Role, account) }, "apiauth"));
@@ -54,6 +109,7 @@ namespace FeMs.Share
         }
         public void MarkUserAsLoggedOut()
         {
+            
             var anonymousUser = new ClaimsPrincipal(new ClaimsIdentity());
             var authState = Task.FromResult(new AuthenticationState(anonymousUser));
             NotifyAuthenticationStateChanged(authState);
@@ -101,5 +157,12 @@ namespace FeMs.Share
             }
             return Convert.FromBase64String(base64);
         }
+
+        //public Task Handle(LoginEvent notification, CancellationToken cancellationToken)
+        //{
+        //    //  MarkUserAsAuthenticated(notification.tokens.accessToken, notification.tokens.refreshToken);
+        //    Console.WriteLine(randm);
+        //    return Task.CompletedTask;
+        //}
     }
 }

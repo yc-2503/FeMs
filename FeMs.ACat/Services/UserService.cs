@@ -1,7 +1,9 @@
 ﻿using FeMs.ACat.Models;
+using FeMs.ACat.Utils;
 using FeMs.Share;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.Configuration;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -23,28 +25,29 @@ namespace FeMs.ACat.Services
     public class UserService : IUserService
     {
         private readonly HttpClient _httpClient;
-        private readonly AuthenticationStateProvider authenticationStateProvider;
         private readonly string baseUrl;
-        public UserService(IHttpClientFactory httpClientFactory, AuthenticationStateProvider authenticationStateProvider)
+        TokenHelper tokenHelper;
+        public UserService(IHttpClientFactory httpfactory,IConfiguration configuration, TokenHelper tokenHelper)
         {
-
-            _httpClient = httpClientFactory.CreateClient(name: "Identity"); ;
-
-            this.authenticationStateProvider = authenticationStateProvider;
+            _httpClient = httpfactory.CreateClient("Identity");
+            baseUrl = configuration.GetValue<string>("IdentityURL");
+            this.tokenHelper = tokenHelper;
         }
 
         public async Task<CurrentUser> GetCurrentUserAsync()
         {
-
             CurrentUser cUser = new CurrentUser();
-            var r = await _httpClient.GetAsync("Login/GetCurrentUserInfo");
+            cUser.Name = String.Empty;
+            string token = tokenHelper.GetAccessToke();
+            if(token == string.Empty)
+            {
+                token = await tokenHelper.GetAccessTokeAsync();
+            }
+            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            var r = await _httpClient.GetAsync($"{baseUrl}Login/GetCurrentUserInfo");
             if (r != null)
             {
-                //JWT过期了，客户端其实不知道，这里这么实现不太好，有人是专门创建了一个线程，不断的去访问server看JWT有没有过期。
-                if(r.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                {
-                    ((ApiAuthenticationStateProvider)authenticationStateProvider).MarkUserAsLoggedOut();
-                }else if(r.StatusCode == System.Net.HttpStatusCode.OK)
+                if(r.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     var user = await r.Content.ReadFromJsonAsync<UserDTO>();
                     cUser.Name = user.UserName;
@@ -52,10 +55,6 @@ namespace FeMs.ACat.Services
                     cUser.Phone = user.PhoneNumber;
                 }
             }
-            //UserDTO response = await _httpClient.GetFromJsonAsync<UserDTO>($"{baseUrl}Login/GetCurrentUserInfo");
-            //cUser.Name = response.UserName;
-            //cUser.Email = response.Email;
-            //cUser.Phone = response.PhoneNumber;
 
             return cUser;
         }
@@ -63,6 +62,8 @@ namespace FeMs.ACat.Services
         public async Task<int> GetUsersCount()
         {
             int _total = 0;
+            string token = tokenHelper.GetAccessToke();
+            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
             var rs = await _httpClient.GetStringAsync($"{baseUrl}UsersInfo/GetUsersCount");
             int.TryParse(rs, out _total);
             return _total;
@@ -72,6 +73,7 @@ namespace FeMs.ACat.Services
             List<UserDTO> _data = new List<UserDTO>();
             if (to >= from && from >= 0 & to >= 0)
             {
+                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", tokenHelper.GetAccessToke());
                 _data = await _httpClient.GetFromJsonAsync<List<UserDTO>>($"{baseUrl}UsersInfo/GetUsers?from={from}&to={to}");
             }
             return _data;
@@ -82,6 +84,7 @@ namespace FeMs.ACat.Services
             List<RoleDTO> _data = new List<RoleDTO>();
             if (to >= from && from >= 0 & to >= 0)
             {
+                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", tokenHelper.GetAccessToke());
                 _data = await _httpClient.GetFromJsonAsync<List<RoleDTO>>($"{baseUrl}UsersInfo/GetRoles?from={from}&to={to}");
             }
             return _data;
@@ -90,6 +93,8 @@ namespace FeMs.ACat.Services
         public async Task<int> GetRolesCount()
         {
             int _total = 0;
+            string token = tokenHelper.GetAccessToke();
+            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
             var rs = await _httpClient.GetStringAsync($"{baseUrl}UsersInfo/GetRolesCount");
             int.TryParse(rs, out _total);
             return _total;

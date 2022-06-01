@@ -6,5 +6,6 @@
         public string Issuer { get; set; }
         public string Audience { get; set; }
         public int ExpireSeconds { get; set; }
+        public int RefreshSeconds { get; set; }
     }
 }

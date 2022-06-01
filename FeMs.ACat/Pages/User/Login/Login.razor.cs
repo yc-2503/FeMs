@@ -1,7 +1,9 @@
 ﻿using AntDesign;
 using FeMs.ACat.Models;
 using FeMs.ACat.Services;
+using FeMs.ACat.Utils;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using System.Threading.Tasks;
 
 namespace FeMs.ACat.Pages.User
@@ -13,7 +15,7 @@ namespace FeMs.ACat.Pages.User
         [Inject] public NavigationManager NavigationManager { get; set; }
 
         [Inject] public IAccountService AccountService { get; set; }
-
+        //[Inject] public AuthenticationStateProvider auProvider { get; set; }
         [Inject] public MessageService Message { get; set; }
         int loginType = 1;
         public async void HandleSubmit()
@@ -23,6 +25,7 @@ namespace FeMs.ACat.Pages.User
                 var r = await AccountService.LoginAsync(_model);
                 if (r.status)
                 {
+                   // ((ApiAuthenticationStateProvider)auProvider).MarkUserAsAuthenticated();
                     NavigationManager.NavigateTo("/");
                     return;
                 }else

@@ -1,5 +1,7 @@
 ﻿using FeMs.ACat.Models;
+using FeMs.ACat.Utils;
 using FeMs.Share;
+using MediatR;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.Configuration;
 using System;
@@ -14,65 +16,76 @@ namespace FeMs.ACat.Services
 {
     public interface IAccountService
     {
-        Task<(bool status, string? msg)> LoginAsync(LoginParamsType model);
+        Task<(bool status, string msg)> LoginAsync(LoginParamsType model);
         void Logout();
-        Task<bool> ReLoginAsync();
+        Task<string> ReLoginAsync();
         Task<string> GetCaptchaAsync(string modile);
     }
-
+    //这个类只用于身份识别及授权，
+    /// <summary>
+    /// PLAN A 自己管理自己的HTTPCLIENT,获取授权TOKEN或者TOKEN更新后，发布MediatR事件通知其他服务更新自己的TOKEN
+    /// PLAN B 全部服务使用同一个httpclient
+    /// </summary>
     public class AccountService : IAccountService
     {
-        private readonly Random _random = new Random();
+         private readonly Random _random = new Random();
         private readonly AuthenticationStateProvider auProvider;
 
         private readonly HttpClient httpClient;
+        private readonly string baseUrl;
 
-        LoginParamsType _model = new LoginParamsType();
-        public AccountService(AuthenticationStateProvider auProvider, IHttpClientFactory httpClientFactory)
+        private readonly TokenHelper _tokenHelper;
+        public AccountService(AuthenticationStateProvider auProvider, IConfiguration configuration, TokenHelper tokenHelper)
         {
-            this.httpClient = httpClientFactory.CreateClient(name:"Identity");
+            httpClient = new HttpClient();
+            baseUrl = configuration.GetValue<string>("IdentityURL");
             this.auProvider = auProvider;
-           // this.baseUrl = configuration.GetValue<string>("IdentityURL");
+            this._tokenHelper = tokenHelper;
+            //loginHandler.ReLoginAsync = this.ReLoginAsync;//LoginHandler loginHandler,
+            //loginHandler.LoginOut = this.Logout;
+            // this.baseUrl = configuration.GetValue<string>("IdentityURL");
 
         }
 
         public void Logout()
         {
-            httpClient.DefaultRequestHeaders.Authorization = null; 
-            ((ApiAuthenticationStateProvider)auProvider).RemoveToken();
+            _tokenHelper.RemoveToken();
             ((ApiAuthenticationStateProvider)auProvider).MarkUserAsLoggedOut();
         }
-        public async Task<bool> ReLoginAsync()
+        public async Task<string> ReLoginAsync()
         {
-            var response = await httpClient.PostAsJsonAsync($"http://172.16.12.157:5152/Login/LoginByUserNameAndPwd", new { UserName = _model.UserName, Pwd = _model.Password });
+            string refreshToken =  _tokenHelper.GetRefreshToken();
+            if (string.IsNullOrWhiteSpace(refreshToken))
+            {
+                return string.Empty;
+            }
+            httpClient.DefaultRequestHeaders.Authorization = new  AuthenticationHeaderValue("Bearer", refreshToken);
+            var response = await httpClient.GetAsync($"{baseUrl}Login/LoginByRefreshToken");
             if (response.IsSuccessStatusCode)
             {
-                var token = await response.Content.ReadAsStringAsync();
-                ((ApiAuthenticationStateProvider)auProvider).MarkUserAsAuthenticated(token);
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                var token = await response.Content.ReadFromJsonAsync<IdentityToken>();
 
-                return true;
+                _tokenHelper.SetAccessToken(token.accessToken);
+                _tokenHelper.SetRefreshToken(token.refreshToken);
+
+                return token.accessToken;
             }
             else
             {
-                return false;
+                return string.Empty;
             }
         }
-        public async Task<(bool status,string?msg)> LoginAsync(LoginParamsType model)
+        public async Task<(bool status,string msg)> LoginAsync(LoginParamsType model)
         {
-            // todo: login logic
-            //new Uri(@"http://localhost:5152/") 
-            //var response = await httpClient.PostAsJsonAsync($"{baseUrl}Login/LoginByUserNameAndPwd", new { UserName = model.UserName, Pwd = model.Password });
-            var response = await httpClient.PostAsJsonAsync("Login/LoginByUserNameAndPwd", new { UserName = model.UserName, Pwd = model.Password });
+            var response = await httpClient.PostAsJsonAsync($"{baseUrl}Login/LoginByUserNameAndPwd", new { UserName = model.UserName, Pwd = model.Password });
 
             if (response.IsSuccessStatusCode)
             {
-                var token = await response.Content.ReadAsStringAsync();
-                ((ApiAuthenticationStateProvider)auProvider).MarkUserAsAuthenticated(token);
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-                _model.UserName = model.UserName;
-                _model.Password = model.Password;
+                var token = await response.Content.ReadFromJsonAsync<IdentityToken>();
+                
+                _tokenHelper.SetAccessToken(token.accessToken);
+                _tokenHelper.SetRefreshToken(token.refreshToken);
+                
                 return (true,string.Empty);
             }
             else

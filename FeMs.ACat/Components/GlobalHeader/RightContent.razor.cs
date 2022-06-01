@@ -2,7 +2,9 @@
 using AntDesign.ProLayout;
 using FeMs.ACat.Models;
 using FeMs.ACat.Services;
+using FeMs.ACat.Utils;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -50,17 +52,21 @@ namespace FeMs.ACat.Components
         [Inject] protected IAccountService AuService { get; set; }
         [Inject] protected IProjectService ProjectService { get; set; }
         [Inject] protected MessageService MessageService { get; set; }
-
+        [Inject] public AuthenticationStateProvider auProvider { get; set; }
         protected override async Task OnInitializedAsync()
         {
             await base.OnInitializedAsync();
             SetClassMap();
             _currentUser = await UserService.GetCurrentUserAsync();
-            var notices = await ProjectService.GetNoticesAsync();
-            _notifications = notices.Where(x => x.Type == "notification").Cast<NoticeIconData>().ToArray();
-            _messages = notices.Where(x => x.Type == "message").Cast<NoticeIconData>().ToArray();
-            _events = notices.Where(x => x.Type == "event").Cast<NoticeIconData>().ToArray();
-            _count = notices.Length;
+            if(_currentUser.Name != string.Empty)
+            {
+                var notices = await ProjectService.GetNoticesAsync();
+                _notifications = notices.Where(x => x.Type == "notification").Cast<NoticeIconData>().ToArray();
+                _messages = notices.Where(x => x.Type == "message").Cast<NoticeIconData>().ToArray();
+                _events = notices.Where(x => x.Type == "event").Cast<NoticeIconData>().ToArray();
+                _count = notices.Length;
+                ((ApiAuthenticationStateProvider)auProvider).MarkUserAsAuthenticated();
+            }
             //StateHasChanged();
         }
 
